@@ -1,5 +1,6 @@
 import { FieldsetAudienceDisplay, FieldsetQueueSkillsType } from 'vex-tm-client'
 import type { ModuleInstance } from './main.js'
+import { defaultDisplay, displayChoices } from './audianceDisplay.js'
 
 export function UpdateActions(self: ModuleInstance): void {
 	self.setActionDefinitions({
@@ -66,27 +67,20 @@ export function UpdateActions(self: ModuleInstance): void {
 					id: 'display',
 					type: 'dropdown',
 					label: 'Display Screen',
-					choices: [
-						{ id: FieldsetAudienceDisplay.Blank.toString(), label: 'None' },
-						{ id: FieldsetAudienceDisplay.Logo.toString(), label: 'Logo' },
-						{ id: FieldsetAudienceDisplay.Intro.toString(), label: 'Up Next' },
-						{ id: FieldsetAudienceDisplay.InMatch.toString(), label: 'In-Match' },
-						{ id: FieldsetAudienceDisplay.SavedMatchResults.toString(), label: 'Saved Match Results' },
-						{ id: FieldsetAudienceDisplay.Schedule.toString(), label: 'Schedule' },
-						{ id: FieldsetAudienceDisplay.Rankings.toString(), label: 'Rankings' },
-						{ id: FieldsetAudienceDisplay.SkillsRankings.toString(), label: 'Skills Rankings' },
-						{ id: FieldsetAudienceDisplay.AllianceSelection.toString(), label: 'Alliance Selection' },
-						{ id: FieldsetAudienceDisplay.ElimBracket.toString(), label: 'Elim Bracket' },
-						{ id: FieldsetAudienceDisplay.Slides.toString(), label: 'Award Slides' },
-						{ id: FieldsetAudienceDisplay.Inspection.toString(), label: 'Inspection' },
-					],
+					choices: displayChoices,
 					allowCustom: false,
-					default: FieldsetAudienceDisplay.Blank.toString(),
+					default: defaultDisplay.toString(),
 				},
 			],
 			callback: async (action) => {
 				const display: FieldsetAudienceDisplay = action.options.display as FieldsetAudienceDisplay
-				await self.fieldset?.setAudienceDisplay(display)
+				try {
+					self.log('debug', `Setting audience display to ${display}`)
+					await self.fieldset?.setAudienceDisplay(display)
+					self.log('debug', `Done setting audience display to ${display}`)
+				} catch (error) {
+					self.log('error', `Error setting audience display: ${error}`)
+				}
 			},
 		},
 	})

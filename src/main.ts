@@ -171,6 +171,11 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecretConfi
 			})
 		})
 
+		fieldset.on('audienceDisplayChanged', () => {
+			this.log('debug', `audienceDisplayChanged event received ${this.fieldset?.state.audienceDisplay}`)
+			this.checkFeedbacks('audience_display')
+		})
+
 		//connect to fieldset
 		this.log('debug', `Connecting to Fieldset ${this.config.fieldset_name}`)
 		const fieldsetRes = await fieldset.connect()
@@ -185,7 +190,7 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecretConfi
 		this.log('debug', `Connecting to Fieldset ${this.config.fieldset_name} succeeded`)
 
 		//add websocket health event listeners
-		fieldset.websocket.addEventListener('close', () => {
+		fieldset.websocket?.addEventListener('close', () => {
 			this.log('warn', `Fieldset ${this.config.fieldset_name} closed`)
 			this.updateStatus(InstanceStatus.Disconnected, `Fieldset ${this.config.fieldset_name} closed`)
 
@@ -212,7 +217,7 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecretConfi
 				}, 10000) //attempt reconnect every 10 seconds
 			}
 		})
-		fieldset.websocket.addEventListener('error', (err: unknown) => {
+		fieldset.websocket?.addEventListener('error', (err: unknown) => {
 			this.log('warn', `Fieldset ${this.config.fieldset_name} error: ${err}`)
 		})
 		this.fieldset = fieldset
