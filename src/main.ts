@@ -35,7 +35,7 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecretConfi
 		super(internal)
 	}
 
-	async connect(): Promise<void> {
+	async connect(): Promise<ConnectResult> {
 		// verify user config
 		if (
 			this.config.client_id === undefined ||
@@ -43,17 +43,17 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecretConfi
 			this.config.client_expiration === undefined
 		) {
 			this.updateStatus(InstanceStatus.BadConfig, 'tm api credentials not provided')
-			return
+			return { success: false, error_msg: 'tm api credentials not provided' }
 		}
 
 		if (this.config.ip === undefined || this.secrets.api_key === undefined) {
 			this.updateStatus(InstanceStatus.BadConfig, 'tm connection info not provided')
-			return
+			return { success: false, error_msg: 'tm connection info not provided' }
 		}
 
 		if (this.config.fieldset_name === undefined) {
 			this.updateStatus(InstanceStatus.BadConfig, 'fieldset connection info not provided')
-			return
+			return { success: false, error_msg: 'fieldset connection info not provided' }
 		}
 
 		const clientArgs: ClientArgs = {
@@ -69,27 +69,32 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecretConfi
 		const fieldsetRes = await getFieldset(clientArgs, this.config.fieldset_name)
 		if (fieldsetRes.success === false) {
 			this.updateStatus(InstanceStatus.ConnectionFailure, fieldsetRes.error_msg)
-			return
+			return { success: false, error_msg: fieldsetRes.error_msg, error_result: fieldsetRes }
 		}
 		this.fieldset = fieldsetRes.fieldset
 
 		const fieldsRes = await getFieldsetFields(this.fieldset)
 		if (fieldsRes.success === false) {
 			this.updateStatus(InstanceStatus.ConnectionFailure, fieldsRes.error_msg)
-			return
+			return { success: false, error_msg: fieldsRes.error_msg, error_result: fieldsRes }
 		}
 		this.fields = fieldsRes.fields
 
 		const fieldsetConnectionRes = await this.connectToFieldset(this.fieldset)
 		if (fieldsetConnectionRes.success === false) {
 			this.updateStatus(InstanceStatus.ConnectionFailure, fieldsetConnectionRes.error_msg)
-			return
+			return {
+				success: false,
+				error_msg: fieldsetConnectionRes.error_msg,
+				error_result: fieldsetConnectionRes,
+			}
 		}
-
-		this.updateStatus(InstanceStatus.Ok)
 
 		//initialize variables
 		this.lastVariableState = VexTmClientMatchStateToVariableStateMapper(this.fieldset.state, this.fields)
+
+		this.updateStatus(InstanceStatus.Ok)
+		return { success: true }
 	}
 
 	async init(config: ModuleConfig, _isFirstInit: boolean, secrets: ModuleSecretConfig): Promise<void> {
@@ -97,7 +102,10 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecretConfi
 		this.secrets = secrets
 		this.log('debug', `init ${JSON.stringify({ config: this.config, secrets: this.secrets })}`)
 
-		await this.connect() // connect to TM and Fieldset
+		const connectRes = await this.connect() // connect to TM and Fieldset
+		if (connectRes.success === false) {
+			return
+		}
 
 		this.updateActions() // export actions
 		this.updateFeedbacks() // export feedbacks
@@ -396,3 +404,13 @@ function VexTmClientMatchStateToVariableStateMapper(state: FieldsetState, fields
 			}
 	}
 }
+
+type ConnectResult =
+	| {
+			success: true
+	  }
+	| {
+			success: false
+			error_msg: string
+			error_result?: unknown
+	  }
