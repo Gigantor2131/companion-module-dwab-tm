@@ -74,13 +74,7 @@ export function UpdateActions(self: ModuleInstance): void {
 			],
 			callback: async (action) => {
 				const display: FieldsetAudienceDisplay = action.options.display as FieldsetAudienceDisplay
-				try {
-					self.log('debug', `Setting audience display to ${display}`)
-					await self.fieldset?.setAudienceDisplay(display)
-					self.log('debug', `Done setting audience display to ${display}`)
-				} catch (error) {
-					self.log('error', `Error setting audience display: ${error}`)
-				}
+				await self.fieldset?.setAudienceDisplay(display)
 			},
 		},
 	})
