@@ -34,31 +34,33 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 				return current.toString() === target.toString()
 			},
 		},
-
-		ChannelState: {
-			name: 'Example Feedback',
+		active_field: {
+			name: 'Active Field is...',
 			type: 'boolean',
 			defaultStyle: {
-				bgcolor: combineRgb(255, 0, 0),
+				bgcolor: combineRgb(0, 255, 0),
 				color: combineRgb(0, 0, 0),
 			},
 			options: [
 				{
-					id: 'num',
-					type: 'number',
-					label: 'Test',
-					default: 5,
-					min: 0,
-					max: 10,
+					id: 'field',
+					type: 'dropdown',
+					label: 'Field',
+					choices: self.fields?.map((f) => ({ id: f.id.toString(), label: f.name })) ?? [],
+					allowCustom: false,
+					default: self.fields[0]?.id,
 				},
 			],
 			callback: (feedback) => {
-				console.log('Hello world!', feedback.options.num)
-				if (Number(feedback.options.num) > 5) {
-					return true
-				} else {
+				const target = feedback.options.field as string
+				const current = self.getVariableValue('field_id') as number | undefined
+
+				self.log('debug', `active_field feedback: current=${current} target=${target}`)
+
+				if (current == undefined) {
 					return false
 				}
+				return current.toString() === target.toString()
 			},
 		},
 	})
