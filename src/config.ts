@@ -19,7 +19,6 @@ export function GetConfigFields(): SomeCompanionConfigField[] {
 			label: 'IP Address',
 			width: 8,
 			regex: Regex.IP,
-			default: '127.0.0.1',
 		},
 		{
 			type: 'textinput',
@@ -51,7 +50,7 @@ export function GetConfigFields(): SomeCompanionConfigField[] {
 			id: 'client_expiration',
 			label: 'Client Expiration',
 			width: 8,
-			default: '2026-06-09T00:00:00+0000',
+			default: '2026-06-09T00:00:00',
 		},
 	]
 }
